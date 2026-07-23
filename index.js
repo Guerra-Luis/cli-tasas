@@ -1,12 +1,25 @@
 #!/usr/bin/env node
-import chalk from 'chalk'       // Colorear el texto de la consola
-import Table from 'cli-table3'  // Generar tablas en la consola
-import Conf from 'conf'         // Manejador de persistencia entre sesiones
-import inquirer from 'inquirer' // Interactividad en la cli
+import chalk from 'chalk'         // Colorear el texto de la consola
+import Table from 'cli-table3'    // Generar tablas en la consola
+import Conf from 'conf'           // Manejador de persistencia entre sesiones
+import inquirer from 'inquirer'   // Interactividad en la cli
+import { parseArgs } from 'node:util' // Gestion de argumentos de la linea de comandos
 
 //Inicializamos el gestor de configuracion
 const config = new Conf({ projectName: 'cli-tasas' })
 const baseURL = 'https://rates.dolarvzla.com'
+
+const { values, positionals } = parseArgs({
+  options: {
+    help: { type: 'boolean', short: 'h' },
+    date: { type: 'string', short: 'd' },
+    version: { type: 'boolean', short: 'v' },
+
+  },
+  allowPositionals: false,
+})
+
+
 
 async function getApiKey() {
 
@@ -65,6 +78,20 @@ async function getUsdtExchangeRates() {
   }
 }
 
+async function getBcvExchangeRatesByDate(date) {
+  try {
+    const dateNumbers = date.split('-').map(num => Number(num))
+    const url = `${baseURL}/bcv/${dateNumbers.join('/')}.json`
+
+    const request = await fetch(url)
+    const response = request.json()
+
+    return response
+  } catch (error) {
+    console.error('Error con la petision por fecha', error)
+  }
+}
+
 async function consultarApi() {
 
   try {
@@ -114,4 +141,31 @@ async function consultarApi() {
   }
 }
 
-consultarApi()
+if (Object.keys(values).length === 0) {
+  //Header
+  console.log('┏━╸╻  ╻   ╺┳╸┏━┓┏━┓┏━┓┏━┓\n┃  ┃  ┃╺━╸ ┃ ┣━┫┗━┓┣━┫┗━┓\n┗━╸┗━╸╹    ╹ ╹ ╹┗━┛╹ ╹┗━┛')
+
+  await consultarApi()
+
+  //Ejemplo de uso
+  console.log('⚠️Si deseas saber la tasa especifica de un dia utiliza el comando:\n')
+  console.log('    tasas --date aaaa-mm-dd\n')
+}
+if (values.help) {
+  // Escribir texto para el help
+}
+if (values.date) {
+  const dataBcv = await getBcvExchangeRatesByDate(values.date)
+
+  const table = new Table({
+    head: [
+      chalk.green('Fecha'),
+      chalk.green('USD_BCV'),
+      chalk.green('EUR_BCV'),
+    ],
+  })
+
+  const [date, usd, eur] = Object.values(dataBcv)
+  table.push([date, usd.toFixed(2), eur.toFixed(2)])
+  console.log(table.toString())
+}

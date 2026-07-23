@@ -57,6 +57,21 @@ Ejecuta el comando `tasa` desde la terminal. Si no tienes configurada una API Ke
 
 La herramienta consultará los datos de las tasas disponibles y mostrará una tabla en consola con la información actual.
 
+### Consulta por fecha
+
+Puedes consultar las tasas del BCV de una fecha específica con el argumento `--date` (o su versión corta `-d`):
+
+```bash
+tasa --date 2024-06-15
+```
+
+El formato de fecha debe ser `aaaa-mm-dd`. Al proporcionar una fecha, la herramienta mostrará solo las tasas del BCV correspondientes a ese día.
+
+```bash
+# Forma corta
+tasa -d 2024-06-15
+```
+
 ## Configuración
 
 Al primera ejecución se pedirá la API Key del servicio de [dolarvzla.com](https://www.dolarvzla.com/settings/api). Esta se almacena localmente de forma segura mediante el paquete [conf](https://www.npmjs.com/package/conf), por lo que no será necesario ingresarla nuevamente.
