@@ -3,6 +3,7 @@ import chalk from 'chalk'         // Colorear el texto de la consola
 import Table from 'cli-table3'    // Generar tablas en la consola
 import Conf from 'conf'           // Manejador de persistencia entre sesiones
 import inquirer from 'inquirer'   // Interactividad en la cli
+import { log } from 'node:console'
 import { parseArgs } from 'node:util' // Gestion de argumentos de la linea de comandos
 
 //Inicializamos el gestor de configuracion
@@ -19,15 +20,26 @@ const { values, positionals } = parseArgs({
   allowPositionals: false,
 })
 
+function apiKeyExpired(stored) {
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000
 
+  if (!stored || !stored.createdAt) return true
+  const ageMs = Date.now() - new Date(stored.createdAt).getTime()
+  return ageMs >= THREE_DAYS_MS
+}
 
 async function getApiKey() {
 
   //Verifica si se posee una apiKey guardada
-  let apiKey = config.get('apiKey')
+  let stored = config.get('apiKey')
 
-  if (!apiKey) {
-    console.log(chalk.yellow('⚠️  No se encontró ninguna API Key configurada.'))
+  if (!stored || !stored.value || apiKeyExpired(stored)) {
+
+    if (apiKeyExpired(stored)) {
+      console.log(chalk.yellow('⚠️  Ha expiradoNo el API Key configurada.'))
+    } else {
+      console.log(chalk.yellow('⚠️  No se encontró ninguna API Key configurada.'))
+    }
     console.log(chalk.yellow('Visite https://www.dolarvzla.com/settings/api para obtener una apikey'))
 
     // Pide el apiKey
@@ -41,20 +53,24 @@ async function getApiKey() {
       }
     ])
 
-    apiKey = answer.key.trim()
+    const apiKey = answer.key.trim()
 
     //Guardamos en local de forma segura
-    config.set('apiKey', apiKey)
+    config.set('apiKey', {
+      value: apiKey,
+      createdAt: new Date()
+    })
     console.log(chalk.green('✔ API Key guardada correctamente.\n'))
   }
 
-  return apiKey
+  return stored.value
 }
 
 async function getBcvExchangeRates() {
   try {
     const request = await fetch(`${baseURL}/bcv/current.json`)
-    const response = request.json()
+    const response = await request.json()
+
     return response
   } catch (error) {
     console.error('Error al solicitar datos del BCV:', error)
@@ -71,7 +87,12 @@ async function getUsdtExchangeRates() {
         'Content-Type': 'application/json'
       }
     })
-    const response = request.json()
+
+    if (request.status === 401) {
+      console.error(chalk.red('✖ La API key ha expirado o es inválida.'))
+    }
+
+    const response = await request.json()
     return response
   } catch (error) {
     console.error('Error al solicitar datos de USDT:', error)
