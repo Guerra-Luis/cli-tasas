@@ -164,7 +164,7 @@ async function consultarApi() {
 
 if (Object.keys(values).length === 0) {
   //Header
-  console.log('┏━╸╻  ╻   ╺┳╸┏━┓┏━┓┏━┓┏━┓\n┃  ┃  ┃╺━╸ ┃ ┣━┫┗━┓┣━┫┗━┓\n┗━╸┗━╸╹    ╹ ╹ ╹┗━┛╹ ╹┗━┛')
+  console.log('\n┏━╸╻  ╻   ╺┳╸┏━┓┏━┓┏━┓┏━┓\n┃  ┃  ┃╺━╸ ┃ ┣━┫┗━┓┣━┫┗━┓\n┗━╸┗━╸╹    ╹ ╹ ╹┗━┛╹ ╹┗━┛\n')
 
   await consultarApi()
 
