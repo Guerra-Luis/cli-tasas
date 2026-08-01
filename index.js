@@ -90,6 +90,7 @@ async function getUsdtExchangeRates() {
 
     if (request.status === 401) {
       console.error(chalk.red('✖ La API key ha expirado o es inválida.'))
+      return
     }
 
     const response = await request.json()
