@@ -63,7 +63,7 @@ async function getApiKey() {
     console.log(chalk.green('✔ API Key guardada correctamente.\n'))
   }
 
-  return stored.value
+  return config.get('apiKey').value
 }
 
 async function getBcvExchangeRates() {
@@ -89,8 +89,8 @@ async function getUsdtExchangeRates() {
     })
 
     if (request.status === 401) {
-      console.error(chalk.red('✖ La API key ha expirado o es inválida.'))
-      return
+      config.delete('apiKey')
+      throw new Error('La API key ha expirado o es inválida.')
     }
 
     const response = await request.json()
@@ -166,12 +166,15 @@ async function consultarApi() {
 if (Object.keys(values).length === 0) {
   //Header
   console.log('\n┏━╸╻  ╻   ╺┳╸┏━┓┏━┓┏━┓┏━┓\n┃  ┃  ┃╺━╸ ┃ ┣━┫┗━┓┣━┫┗━┓\n┗━╸┗━╸╹    ╹ ╹ ╹┗━┛╹ ╹┗━┛\n')
+  try {
+    await consultarApi()
 
-  await consultarApi()
-
-  //Ejemplo de uso
-  console.log('⚠️Si deseas saber la tasa especifica de un dia utiliza el comando:\n')
-  console.log('    tasas --date aaaa-mm-dd\n')
+    //Ejemplo de uso
+    console.log('⚠️Si deseas saber la tasa especifica de un dia utiliza el comando:\n')
+    console.log('    tasas --date aaaa-mm-dd\n')
+  } catch (error) {
+    console.error(error)
+  }
 }
 if (values.help) {
   // Escribir texto para el help
